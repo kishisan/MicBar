@@ -1,0 +1,7 @@
+.build/
+.swiftpm/
+MicBar.app/
+*.xcodeproj
+*.xcworkspace
+DerivedData/
+.DS_Store
