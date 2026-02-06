@@ -3,7 +3,7 @@ import AppKit
 final class StatusBarController: NSObject {
     private var statusItem: NSStatusItem!
     private var durationTimer: Timer?
-    private var currentState = MicState(isActive: false, deviceName: nil, activeSince: nil)
+    private var currentState = MicState(isActive: false, isMuted: false, deviceName: nil, activeSince: nil)
 
     private let durationMenuItemTag = 999
     private let settings = SettingsManager.shared
@@ -52,7 +52,15 @@ final class StatusBarController: NSObject {
     }
 
     private func makeTitle() -> NSAttributedString {
-        if currentState.isActive {
+        if currentState.isMuted {
+            return NSAttributedString(
+                string: " MUTED",
+                attributes: [
+                    .foregroundColor: NSColor.systemOrange,
+                    .font: NSFont.monospacedSystemFont(ofSize: 12, weight: .bold),
+                ]
+            )
+        } else if currentState.isActive {
             return NSAttributedString(
                 string: " \u{25CF} REC",
                 attributes: [
@@ -72,14 +80,24 @@ final class StatusBarController: NSObject {
     }
 
     private func makeIcon() -> NSImage? {
-        let symbolName = currentState.isActive ? "mic.fill" : "mic"
+        let symbolName: String
+        if currentState.isMuted && currentState.isActive {
+            symbolName = "mic.slash.fill"
+        } else if currentState.isMuted {
+            symbolName = "mic.slash"
+        } else if currentState.isActive {
+            symbolName = "mic.fill"
+        } else {
+            symbolName = "mic"
+        }
+
         guard let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Microphone")
         else { return nil }
 
         let config = NSImage.SymbolConfiguration(pointSize: 14, weight: .medium)
         let configured = image.withSymbolConfiguration(config) ?? image
 
-        configured.isTemplate = !currentState.isActive
+        configured.isTemplate = !currentState.isActive && !currentState.isMuted
         return configured
     }
 
@@ -178,11 +196,25 @@ final class StatusBarController: NSObject {
                 insertIndex += 1
             }
 
+            if currentState.isMuted {
+                let muteLine = NSMenuItem(
+                    title: "  Mute: On", action: nil, keyEquivalent: "")
+                muteLine.isEnabled = false
+                menu.insertItem(muteLine, at: insertIndex)
+                insertIndex += 1
+            }
+
             let durationLine = NSMenuItem(title: "  Duration: 0s", action: nil, keyEquivalent: "")
             durationLine.isEnabled = false
             durationLine.tag = durationMenuItemTag
             menu.insertItem(durationLine, at: insertIndex)
             updateDurationMenuItem()
+
+        } else if currentState.isMuted {
+            let statusLine = NSMenuItem(
+                title: "Microphone: Muted", action: nil, keyEquivalent: "")
+            statusLine.isEnabled = false
+            menu.insertItem(statusLine, at: insertIndex)
 
         } else {
             let statusLine = NSMenuItem(

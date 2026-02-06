@@ -36,7 +36,7 @@ final class ProcessResolver {
         "com.elgato.StreamDeck": "Stream Deck",
 
         // Voice assistants / System
-        "com.apple.SpeechRecognitionCore": "Dictation",
+        "com.apple.assistant_service": "Siri/Dictation",
         "com.apple.Siri": "Siri",
     ]
 

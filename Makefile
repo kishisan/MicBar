@@ -6,14 +6,23 @@ APP_BUNDLE = $(APP_NAME).app
 SOURCES = $(shell find Sources/MicBar -name '*.swift')
 SDK = $(shell xcrun --show-sdk-path)
 
+DEBUG ?= 0
+
 SWIFTC_FLAGS = \
-	-O \
 	-sdk $(SDK) \
 	-target arm64-apple-macosx13.0 \
 	-framework AppKit \
+	-framework AVFoundation \
+	-framework Carbon \
 	-framework CoreAudio \
 	-framework ServiceManagement \
 	-swift-version 5
+
+ifeq ($(DEBUG),1)
+	SWIFTC_FLAGS += -DDEBUG -Onone -g
+else
+	SWIFTC_FLAGS += -O
+endif
 
 .PHONY: build app sign clean run install
 
